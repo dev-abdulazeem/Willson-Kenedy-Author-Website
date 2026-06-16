@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { sendWelcomeEmail } = require('../services/emailService');
 
 // Public: Subscribe
 exports.subscribe = async (req, res) => {
@@ -14,6 +15,11 @@ exports.subscribe = async (req, res) => {
       'INSERT INTO subscribers (email) VALUES ($1) RETURNING *',
       [email]
     );
+    
+    // Send welcome email in background
+    sendWelcomeEmail(email).catch(err => {
+      console.error('Failed to send welcome email:', err);
+    });
     
     res.status(201).json({ message: 'Subscribed successfully', subscriber: result.rows[0] });
   } catch (err) {

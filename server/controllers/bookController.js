@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const slugify = require('slugify');
+const { sendToAllSubscribers } = require('../services/emailService');
 
 // Get all published books
 exports.getBooks = async (req, res) => {
@@ -49,7 +50,16 @@ exports.createBook = async (req, res) => {
       [title, slug, synopsis, cover_image_url, genre, release_date, price, buy_link, is_published || false]
     );
     
-    res.status(201).json(result.rows[0]);
+    const newBook = result.rows[0];
+    
+    // If published, send email to all subscribers in background
+    if (newBook.is_published) {
+      sendToAllSubscribers(newBook, pool).catch(err => {
+        console.error('Failed to send subscriber emails:', err);
+      });
+    }
+    
+    res.status(201).json(newBook);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -62,6 +72,10 @@ exports.updateBook = async (req, res) => {
     const cover_image_url = req.file ? `/uploads/${req.file.filename}` : req.body.existing_image;
     const slug = slugify(title, { lower: true, strict: true });
     
+    // Check if book was previously unpublished
+    const oldBook = await pool.query('SELECT is_published FROM books WHERE id = $1', [req.params.id]);
+    const wasPublished = oldBook.rows[0]?.is_published;
+    
     const result = await pool.query(
       `UPDATE books SET title = $1, slug = $2, synopsis = $3, cover_image_url = $4, 
        genre = $5, release_date = $6, price = $7, buy_link = $8, is_published = $9, updated_at = NOW()
@@ -69,7 +83,16 @@ exports.updateBook = async (req, res) => {
       [title, slug, synopsis, cover_image_url, genre, release_date, price, buy_link, is_published, req.params.id]
     );
     
-    res.json(result.rows[0]);
+    const updatedBook = result.rows[0];
+    
+    // If just published now (was draft before), send emails
+    if (is_published && !wasPublished) {
+      sendToAllSubscribers(updatedBook, pool).catch(err => {
+        console.error('Failed to send subscriber emails:', err);
+      });
+    }
+    
+    res.json(updatedBook);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
