@@ -26,11 +26,51 @@ const GoodreadsIcon = () => (
   </svg>
 );
 
+// Skeleton components
+function ContactSkeleton() {
+  return (
+    <div className="min-h-screen bg-cream animate-pulse">
+      <div className="bg-ink pt-32 pb-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="h-3 bg-cream/10 rounded w-32 mb-4" />
+          <div className="h-16 bg-cream/10 rounded w-64" />
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="grid lg:grid-cols-5 gap-16 lg:gap-20">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-8 bg-stone/10 rounded w-48" />
+            <div className="h-4 bg-stone/10 rounded w-full" />
+            <div className="h-4 bg-stone/10 rounded w-2/3" />
+            <div className="space-y-4 pt-4">
+              <div className="h-3 bg-stone/10 rounded w-16" />
+              <div className="h-5 bg-stone/10 rounded w-48" />
+            </div>
+            <div className="flex gap-3">
+              {[1,2,3,4].map(i => <div key={i} className="w-12 h-12 rounded-full bg-stone/10" />)}
+            </div>
+          </div>
+          <div className="lg:col-span-3 space-y-6">
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div className="h-14 bg-stone/10 rounded" />
+              <div className="h-14 bg-stone/10 rounded" />
+            </div>
+            <div className="h-14 bg-stone/10 rounded" />
+            <div className="h-40 bg-stone/10 rounded" />
+            <div className="h-14 bg-stone/10 rounded w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', body: '' });
   const [errors, setErrors] = useState({});
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
   const socialLinks = [
     { name: 'X', icon: <XIcon />, url: 'https://x.com/willsonkenedy', color: 'hover:bg-white hover:text-ink' },
@@ -71,11 +111,13 @@ export default function Contact() {
   };
 
   const inputClasses = (field) => `
-    w-full px-5 py-4 bg-parchment border rounded-lg text-ink placeholder:text-stone/50 
+    w-full px-5 py-4 bg-parchment border-2 rounded-lg text-ink placeholder:text-stone/40 
     focus:outline-none transition-all duration-300
     ${errors[field] 
-      ? 'border-red-400 focus:ring-2 focus:ring-red-400/20' 
-      : 'border-stone/10 focus:border-warm focus:ring-2 focus:ring-warm/20 hover:border-stone/30'
+      ? 'border-red-400 focus:border-red-400 focus:ring-4 focus:ring-red-400/10' 
+      : focusedField === field
+        ? 'border-warm focus:border-warm focus:ring-4 focus:ring-warm/10'
+        : 'border-transparent focus:border-warm focus:ring-4 focus:ring-warm/10 hover:border-stone/20'
     }
   `;
 
@@ -84,8 +126,8 @@ export default function Contact() {
       {/* Header */}
       <div className="bg-ink text-cream pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4">Get in Touch</p>
-          <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl">Contact</h1>
+          <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4 animate-fade-in">Get in Touch</p>
+          <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl animate-fade-in">Contact</h1>
         </div>
       </div>
 
@@ -93,7 +135,7 @@ export default function Contact() {
       <div className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-5 gap-16 lg:gap-20">
           {/* Info Side */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 animate-fade-in">
             <h2 className="font-serif text-3xl text-ink mb-6">Let's Connect</h2>
             <p className="text-stone leading-relaxed mb-12 text-lg">
               Whether you're a reader with thoughts to share, a fellow writer seeking collaboration, 
@@ -103,8 +145,9 @@ export default function Contact() {
             <div className="space-y-8">
               <div className="group">
                 <p className="text-xs uppercase tracking-[0.2em] text-muted mb-2">Email</p>
-                <a href="mailto:hello@willsonkenedy.com" className="text-ink text-lg group-hover:text-warm transition-colors">
+                <a href="mailto:hello@willsonkenedy.com" className="text-ink text-lg group-hover:text-warm transition-colors inline-flex items-center gap-2">
                   hello@willsonkenedy.com
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-warm">→</span>
                 </a>
               </div>
               <div>
@@ -114,14 +157,15 @@ export default function Contact() {
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-muted mb-4">Follow</p>
                 <div className="flex gap-3">
-                  {socialLinks.map(social => (
+                  {socialLinks.map((social, i) => (
                     <a 
                       key={social.name}
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`w-12 h-12 rounded-full border border-stone/20 flex items-center justify-center text-stone hover:border-transparent hover:text-cream transition-all duration-300 ${social.color}`}
+                      className={`w-12 h-12 rounded-full border border-stone/20 flex items-center justify-center text-stone hover:border-transparent hover:text-cream transition-all duration-300 hover:scale-110 hover:-translate-y-1 ${social.color}`}
                       title={social.name}
+                      style={{ animationDelay: `${i * 75}ms` }}
                     >
                       {social.icon}
                     </a>
@@ -132,10 +176,10 @@ export default function Contact() {
           </div>
 
           {/* Form Side */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 animate-fade-in">
             {sent ? (
-              <div className="bg-parchment rounded-2xl p-12 lg:p-16 text-center border border-stone/10">
-                <div className="w-20 h-20 bg-warm/10 rounded-full flex items-center justify-center mx-auto mb-8">
+              <div className="bg-parchment rounded-2xl p-12 lg:p-16 text-center border border-stone/10 animate-fade-in">
+                <div className="w-20 h-20 bg-warm/10 rounded-full flex items-center justify-center mx-auto mb-8 animate-bounce">
                   <svg className="w-10 h-10 text-warm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -144,7 +188,7 @@ export default function Contact() {
                 <p className="text-stone text-lg mb-8">Thank you for reaching out. I'll respond as soon as possible.</p>
                 <button 
                   onClick={() => setSent(false)}
-                  className="px-8 py-3 bg-ink text-cream rounded-lg font-medium hover:bg-charcoal transition-colors"
+                  className="px-8 py-3 bg-ink text-cream rounded-lg font-medium hover:bg-charcoal transition-all hover:scale-105 active:scale-95"
                 >
                   Send Another
                 </button>
@@ -152,7 +196,7 @@ export default function Contact() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                 {errors.submit && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600 text-sm">
+                  <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-red-600 text-sm animate-shake">
                     {errors.submit}
                   </div>
                 )}
@@ -166,10 +210,12 @@ export default function Contact() {
                       type="text"
                       value={form.name}
                       onChange={e => handleChange('name', e.target.value)}
+                      onFocus={() => setFocusedField('name')}
+                      onBlur={() => setFocusedField(null)}
                       className={inputClasses('name')}
                       placeholder="John Doe"
                     />
-                    {errors.name && <p className="text-red-400 text-sm mt-2">{errors.name}</p>}
+                    {errors.name && <p className="text-red-400 text-sm mt-2 animate-fade-in">{errors.name}</p>}
                   </div>
                   <div>
                     <label className="block text-xs uppercase tracking-[0.2em] text-muted mb-3">
@@ -179,10 +225,12 @@ export default function Contact() {
                       type="email"
                       value={form.email}
                       onChange={e => handleChange('email', e.target.value)}
+                      onFocus={() => setFocusedField('email')}
+                      onBlur={() => setFocusedField(null)}
                       className={inputClasses('email')}
                       placeholder="john@example.com"
                     />
-                    {errors.email && <p className="text-red-400 text-sm mt-2">{errors.email}</p>}
+                    {errors.email && <p className="text-red-400 text-sm mt-2 animate-fade-in">{errors.email}</p>}
                   </div>
                 </div>
 
@@ -192,6 +240,8 @@ export default function Contact() {
                     type="text"
                     value={form.subject}
                     onChange={e => handleChange('subject', e.target.value)}
+                    onFocus={() => setFocusedField('subject')}
+                    onBlur={() => setFocusedField(null)}
                     className={inputClasses('subject')}
                     placeholder="What's this about?"
                   />
@@ -205,19 +255,23 @@ export default function Contact() {
                     rows={6}
                     value={form.body}
                     onChange={e => handleChange('body', e.target.value)}
+                    onFocus={() => setFocusedField('body')}
+                    onBlur={() => setFocusedField(null)}
                     className={inputClasses('body')}
                     placeholder="Tell me your thoughts..."
                   />
                   <div className="flex justify-between mt-2">
-                    {errors.body && <p className="text-red-400 text-sm">{errors.body}</p>}
-                    <p className="text-muted text-xs ml-auto">{form.body.length} chars</p>
+                    {errors.body && <p className="text-red-400 text-sm animate-fade-in">{errors.body}</p>}
+                    <p className={`text-xs ml-auto transition-colors ${form.body.length < 10 ? 'text-stone/30' : 'text-warm'}`}>
+                      {form.body.length} chars
+                    </p>
                   </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-4 bg-ink text-cream rounded-lg font-medium hover:bg-charcoal transition-all disabled:opacity-50 flex items-center justify-center gap-3 group"
+                  className="w-full py-4 bg-ink text-cream rounded-lg font-medium hover:bg-charcoal transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {loading ? (
                     <>

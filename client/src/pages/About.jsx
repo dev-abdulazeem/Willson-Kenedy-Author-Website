@@ -1,19 +1,89 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 
+const API_BASE = 'https://willson-kenedy-author-website.onrender.com';
+
+function getImageUrl(path) {
+  if (!path) return null;
+  return path.startsWith('http') ? path : `${API_BASE}${path}`;
+}
+
+function LazyImage({ src, alt, className, fallback }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative w-full h-full">
+      {!loaded && <div className="absolute inset-0 bg-stone/10 animate-pulse" />}
+      <img
+        src={src}
+        alt={alt}
+        className={`${className} transition-opacity duration-700 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.style.display = 'none';
+          if (fallback) e.target.parentElement.innerHTML = fallback;
+        }}
+      />
+    </div>
+  );
+}
+
+function AboutSkeleton() {
+  return (
+    <div className="min-h-screen bg-cream animate-pulse">
+      <div className="bg-ink pt-32 pb-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="h-3 bg-cream/10 rounded w-32 mb-4" />
+          <div className="h-16 bg-cream/10 rounded w-96" />
+        </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="grid lg:grid-cols-12 gap-16">
+          <div className="lg:col-span-5">
+            <div className="aspect-[3/4] rounded-xl bg-stone/10" />
+          </div>
+          <div className="lg:col-span-7 py-8 space-y-6">
+            <div className="h-8 bg-stone/10 rounded w-3/4" />
+            <div className="h-4 bg-stone/10 rounded w-full" />
+            <div className="h-4 bg-stone/10 rounded w-full" />
+            <div className="h-4 bg-stone/10 rounded w-2/3" />
+            <div className="pt-8 space-y-4">
+              <div className="h-6 bg-stone/10 rounded w-48" />
+              {[1,2,3,4].map(i => (
+                <div key={i} className="flex justify-between py-4 border-b border-stone/5">
+                  <div className="h-4 bg-stone/10 rounded w-48" />
+                  <div className="h-4 bg-stone/10 rounded w-12" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function About() {
   const [settings, setSettings] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/site').then(res => setSettings(res.data));
+    setLoading(true);
+    api.get('/site')
+      .then(res => setSettings(res.data))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) return <AboutSkeleton />;
+
+  const fallbackHtml = `<div class="w-full h-full bg-parchment flex items-center justify-center"><span class="font-serif text-9xl text-stone/20">W</span></div>`;
 
   return (
     <div className="min-h-screen bg-cream">
       <div className="bg-ink text-cream pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4">The Author</p>
-          <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl">Willson Kenedy</h1>
+          <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4 animate-fade-in">The Author</p>
+          <h1 className="font-serif text-5xl md:text-6xl lg:text-7xl animate-fade-in">Willson Kenedy</h1>
         </div>
       </div>
 
@@ -21,20 +91,16 @@ export default function About() {
         <div className="grid lg:grid-cols-12 gap-16">
           <div className="lg:col-span-5">
             <div className="sticky top-28">
-              <div className="aspect-[3/4] rounded-xl overflow-hidden">
+              <div className="aspect-[3/4] rounded-xl overflow-hidden shadow-xl bg-parchment">
                 {settings.author_photo ? (
-                  <img 
-                    src={settings.author_photo}
+                  <LazyImage
+                    src={getImageUrl(settings.author_photo)}
                     alt="Willson Kenedy"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = `<div class="w-full h-full bg-parchment flex items-center justify-center"><span class="font-serif text-9xl text-stone/20">W</span></div>`;
-                    }}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                    fallback={fallbackHtml}
                   />
                 ) : (
-                  <div className="w-full h-full bg-parchment flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center">
                     <span className="font-serif text-9xl text-stone/20">W</span>
                   </div>
                 )}
@@ -42,7 +108,7 @@ export default function About() {
             </div>
           </div>
 
-          <div className="lg:col-span-7 py-8">
+          <div className="lg:col-span-7 py-8 animate-fade-in">
             <div className="prose prose-xl max-w-none text-stone leading-relaxed space-y-6">
               <p className="font-serif text-2xl text-ink leading-relaxed">
                 {settings.about_text || 'Willson Kenedy is an acclaimed author whose work explores the intersection of memory, identity, and the stories we tell ourselves.'}
@@ -66,10 +132,14 @@ export default function About() {
                   { award: 'National Book Award', year: '2022' },
                   { award: 'PEN/Faulkner Award', year: '2021' },
                   { award: 'Guggenheim Fellowship', year: '2020' },
-                ].map(item => (
-                  <div key={item.award} className="flex justify-between items-center py-4 border-b border-stone/5">
-                    <span className="text-ink font-medium">{item.award}</span>
-                    <span className="text-muted text-sm">{item.year}</span>
+                ].map((item, i) => (
+                  <div 
+                    key={item.award} 
+                    className="flex justify-between items-center py-4 border-b border-stone/5 group hover:border-warm/30 transition-colors"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  >
+                    <span className="text-ink font-medium group-hover:text-warm transition-colors">{item.award}</span>
+                    <span className="text-muted text-sm font-mono">{item.year}</span>
                   </div>
                 ))}
               </div>

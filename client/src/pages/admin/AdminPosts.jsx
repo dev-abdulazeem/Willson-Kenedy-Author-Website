@@ -3,14 +3,62 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 
+const API_BASE = 'https://willson-kenedy-author-website.onrender.com';
+
+function getImageUrl(path) {
+  if (!path) return null;
+  return path.startsWith('http') ? path : `${API_BASE}${path}`;
+}
+
+function LazyImage({ src, alt, className, fallback }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative w-full h-full">
+      {!loaded && <div className="absolute inset-0 bg-cream/5 animate-pulse" />}
+      <img
+        src={src}
+        alt={alt}
+        className={`${className} transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        onLoad={() => setLoaded(true)}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.style.display = 'none';
+          if (fallback) e.target.parentElement.innerHTML = fallback;
+        }}
+      />
+    </div>
+  );
+}
+
+function PostCardSkeleton() {
+  return (
+    <div className="bg-charcoal rounded-xl p-6 flex items-center gap-6 border border-cream/5 animate-pulse">
+      <div className="w-20 h-20 rounded-lg bg-cream/5 flex-shrink-0" />
+      <div className="flex-1 space-y-3">
+        <div className="h-4 bg-cream/5 rounded w-3/4" />
+        <div className="h-3 bg-cream/5 rounded w-1/2" />
+        <div className="h-3 bg-cream/5 rounded w-24" />
+      </div>
+      <div className="flex gap-4 flex-shrink-0">
+        <div className="h-4 bg-cream/5 rounded w-8" />
+        <div className="h-4 bg-cream/5 rounded w-10" />
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPosts() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ title: '', content: '', excerpt: '', is_published: false });
   const [cover, setCover] = useState(null);
+  const [coverPreview, setCoverPreview] = useState(null);
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     if (!user) { navigate('/admin/login'); return; }
@@ -18,31 +66,49 @@ export default function AdminPosts() {
   }, [user]);
 
   const fetchPosts = async () => {
-    const res = await api.get('/posts/admin/all');
-    setPosts(res.data);
+    setLoading(true);
+    try {
+      const res = await api.get('/posts/admin/all');
+      setPosts(res.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCoverChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCover(file);
+      setCoverPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     const data = new FormData();
     Object.keys(form).forEach(key => data.append(key, form[key]));
     if (cover) data.append('cover', cover);
     if (editing) data.append('existing_image', editing.cover_image || '');
 
-    if (editing) {
-      await api.put(`/posts/${editing.id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
-    } else {
-      await api.post('/posts', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+    try {
+      if (editing) {
+        await api.put(`/posts/${editing.id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      } else {
+        await api.post('/posts', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      }
+      resetForm();
+      setShowForm(false);
+      fetchPosts();
+    } finally {
+      setSubmitting(false);
     }
-
-    resetForm();
-    setShowForm(false);
-    fetchPosts();
   };
 
   const resetForm = () => {
     setForm({ title: '', content: '', excerpt: '', is_published: false });
     setCover(null);
+    setCoverPreview(null);
     setEditing(null);
   };
 
@@ -54,13 +120,16 @@ export default function AdminPosts() {
       excerpt: post.excerpt || '',
       is_published: post.is_published
     });
+    setCoverPreview(null);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this post permanently?')) return;
+    setDeletingId(id);
     await api.delete(`/posts/${id}`);
+    setDeletingId(null);
     fetchPosts();
   };
 
@@ -73,13 +142,13 @@ export default function AdminPosts() {
 
   return (
     <div className="min-h-screen bg-ink text-cream">
-      <header className="bg-charcoal border-b border-cream/10 px-6 lg:px-12 py-5 flex items-center justify-between sticky top-0 z-30">
+      <header className="bg-charcoal border-b border-cream/10 px-6 lg:px-12 py-5 flex items-center justify-between sticky top-0 z-30 backdrop-blur-xl bg-charcoal/90">
         <div className="flex items-center gap-4">
           <Link 
             to="/admin" 
-            className="text-sm text-cream/40 hover:text-cream transition-colors flex items-center gap-2"
+            className="text-sm text-cream/40 hover:text-cream transition-colors flex items-center gap-2 group"
           >
-            ← Dashboard
+            <span className="group-hover:-translate-x-1 transition-transform">←</span> Dashboard
           </Link>
         </div>
         <div className="flex items-center gap-3">
@@ -106,7 +175,7 @@ export default function AdminPosts() {
           </div>
           <button
             onClick={() => { resetForm(); setShowForm(!showForm); }}
-            className="px-6 py-3 bg-warm text-cream rounded-lg font-medium hover:bg-warm/90 transition-all flex items-center gap-2"
+            className="px-6 py-3 bg-warm text-cream rounded-lg font-medium hover:bg-warm/90 transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
           >
             <span>{showForm ? '✕' : '+'}</span>
             {showForm ? 'Close' : 'New Post'}
@@ -114,7 +183,7 @@ export default function AdminPosts() {
         </div>
 
         {showForm && (
-          <div className="bg-charcoal rounded-xl p-8 mb-12 border border-cream/10">
+          <div className="bg-charcoal rounded-xl p-8 mb-12 border border-cream/10 animate-fade-in">
             <h2 className="font-serif text-xl text-cream mb-6">
               {editing ? 'Edit Post' : 'New Post'}
             </h2>
@@ -161,7 +230,7 @@ export default function AdminPosts() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={e => setCover(e.target.files[0])}
+                        onChange={handleCoverChange}
                         className="hidden"
                       />
                     </label>
@@ -169,13 +238,15 @@ export default function AdminPosts() {
                   </div>
                 </div>
                 
-                {editing?.cover_image && !cover && (
-                  <img 
-                    src={editing.cover_image} 
-                    className="h-20 rounded-lg object-cover" 
-                    alt="Current"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
+                {(coverPreview || (editing?.cover_image && !cover)) && (
+                  <div className="relative h-20 rounded-lg overflow-hidden">
+                    <LazyImage
+                      src={coverPreview || getImageUrl(editing.cover_image)}
+                      alt="Current"
+                      className="h-20 rounded-lg object-cover"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
                 )}
 
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -195,8 +266,10 @@ export default function AdminPosts() {
               <div className="flex gap-3 pt-4">
                 <button 
                   type="submit" 
-                  className="px-8 py-3 bg-warm text-cream rounded-lg font-medium hover:bg-warm/90 transition-colors"
+                  disabled={submitting}
+                  className="px-8 py-3 bg-warm text-cream rounded-lg font-medium hover:bg-warm/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
+                  {submitting && <span className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full animate-spin" />}
                   {editing ? 'Update Post' : 'Publish Post'}
                 </button>
                 <button 
@@ -211,64 +284,69 @@ export default function AdminPosts() {
           </div>
         )}
 
-        <div className="space-y-4">
-          {posts.map(post => (
-            <div 
-              key={post.id} 
-              className="bg-charcoal rounded-xl p-6 flex items-center gap-6 border border-cream/5 hover:border-cream/10 transition-all"
-            >
-              <div className="w-20 h-20 rounded-lg bg-ink flex-shrink-0 overflow-hidden">
-                {post.cover_image ? (
-                  <img 
-                    src={post.cover_image} 
-                    className="w-full h-full object-cover"
-                    alt="" 
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><span class="font-serif text-2xl text-cream/10">${post.title[0]}</span></div>`;
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="font-serif text-2xl text-cream/10">{post.title[0]}</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="font-serif text-lg text-cream truncate">{post.title}</h3>
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                    post.is_published ? 'bg-green-500/20 text-green-400' : 'bg-cream/10 text-cream/50'
-                  }`}>
-                    {post.is_published ? 'Live' : 'Draft'}
-                  </span>
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map(i => <PostCardSkeleton key={i} />)}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {posts.map((post, index) => (
+              <div 
+                key={post.id} 
+                className="bg-charcoal rounded-xl p-6 flex items-center gap-6 border border-cream/5 hover:border-cream/10 transition-all group hover:bg-charcoal/80"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="w-20 h-20 rounded-lg bg-ink flex-shrink-0 overflow-hidden">
+                  {post.cover_image ? (
+                    <LazyImage
+                      src={getImageUrl(post.cover_image)}
+                      alt=""
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      fallback={`<div class="w-full h-full flex items-center justify-center"><span class="font-serif text-2xl text-cream/10">${post.title[0]}</span></div>`}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="font-serif text-2xl text-cream/10">{post.title[0]}</span>
+                    </div>
+                  )}
                 </div>
-                <p className="text-cream/30 text-sm truncate">{post.excerpt || 'No excerpt'}</p>
-                <p className="text-cream/20 text-xs mt-1">
-                  {new Date(post.created_at).toLocaleDateString()}
-                </p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-serif text-lg text-cream truncate group-hover:text-warm transition-colors">{post.title}</h3>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      post.is_published ? 'bg-green-500/20 text-green-400' : 'bg-cream/10 text-cream/50'
+                    }`}>
+                      {post.is_published ? 'Live' : 'Draft'}
+                    </span>
+                  </div>
+                  <p className="text-cream/30 text-sm truncate">{post.excerpt || 'No excerpt'}</p>
+                  <p className="text-cream/20 text-xs mt-1">
+                    {new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+                <div className="flex gap-4 flex-shrink-0">
+                  <button 
+                    onClick={() => handleEdit(post)}
+                    className="text-sm text-cream/40 hover:text-warm transition-colors px-3 py-1 rounded hover:bg-cream/5"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(post.id)}
+                    disabled={deletingId === post.id}
+                    className="text-sm text-cream/40 hover:text-red-400 transition-colors px-3 py-1 rounded hover:bg-red-500/5 disabled:opacity-30"
+                  >
+                    {deletingId === post.id ? '...' : 'Delete'}
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-4 flex-shrink-0">
-                <button 
-                  onClick={() => handleEdit(post)}
-                  className="text-sm text-cream/40 hover:text-warm transition-colors"
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => handleDelete(post.id)}
-                  className="text-sm text-cream/40 hover:text-red-400 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {posts.length === 0 && (
-          <div className="text-center py-20">
+        {!loading && posts.length === 0 && (
+          <div className="text-center py-20 border border-dashed border-cream/10 rounded-xl">
+            <div className="text-4xl mb-4">📝</div>
             <p className="text-cream/20 text-lg">No posts yet. Write your first entry.</p>
           </div>
         )}

@@ -2,6 +2,13 @@ import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 
+const API_BASE = 'https://willson-kenedy-author-website.onrender.com';
+
+function getImageUrl(path) {
+  if (!path) return null;
+  return path.startsWith('http') ? path : `${API_BASE}${path}`;
+}
+
 export default function Home() {
   const [settings, setSettings] = useState({});
   const [books, setBooks] = useState([]);
@@ -23,7 +30,7 @@ export default function Home() {
         <div className="absolute inset-0">
           {settings.hero_image ? (
             <img 
-              src={settings.hero_image}
+              src={getImageUrl(settings.hero_image)}
               alt=""
               className={`w-full h-full object-cover transition-all duration-1000 ${heroLoaded ? 'scale-100 opacity-100' : 'scale-110 opacity-0'}`}
               onLoad={() => setHeroLoaded(true)}
@@ -97,7 +104,7 @@ export default function Home() {
                 <div className="relative aspect-[2/3] mb-6 overflow-hidden rounded-lg bg-parchment">
                   {book.cover_image_url ? (
                     <img 
-                      src={book.cover_image_url}
+                      src={getImageUrl(book.cover_image_url)}
                       alt={book.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                       onError={(e) => {
@@ -135,7 +142,7 @@ export default function Home() {
               <div className="aspect-[4/5] rounded-lg overflow-hidden">
                 {settings.author_photo ? (
                   <img 
-                    src={settings.author_photo}
+                    src={getImageUrl(settings.author_photo)}
                     alt="Willson Kenedy"
                     className="w-full h-full object-cover"
                     onError={(e) => { e.target.style.display = 'none'; }}
@@ -209,7 +216,7 @@ export default function Home() {
               <div className="aspect-[16/10] rounded-lg overflow-hidden bg-parchment">
                 {latestPost.cover_image ? (
                   <img 
-                    src={latestPost.cover_image}
+                    src={getImageUrl(latestPost.cover_image)}
                     alt={latestPost.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     onError={(e) => {

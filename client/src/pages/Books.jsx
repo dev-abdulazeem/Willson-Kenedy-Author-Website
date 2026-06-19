@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 
+const API_BASE = 'https://willson-kenedy-author-website.onrender.com';
+
+function getImageUrl(path) {
+  if (!path) return null;
+  return path.startsWith('http') ? path : `${API_BASE}${path}`;
+}
+
 export default function Books() {
   const [books, setBooks] = useState([]);
   const [filter, setFilter] = useState('all');
@@ -51,7 +58,7 @@ export default function Books() {
               <div className="relative aspect-[2/3] mb-6 rounded-lg overflow-hidden bg-parchment shadow-lg group-hover:shadow-2xl transition-all duration-500">
                 {book.cover_image_url ? (
                   <img 
-                    src={book.cover_image_url}
+                    src={getImageUrl(book.cover_image_url)}
                     alt={book.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     onError={(e) => {
