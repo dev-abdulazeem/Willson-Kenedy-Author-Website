@@ -210,9 +210,10 @@ export default function AdminBooks() {
                 
                 {editing?.cover_image_url && !cover && (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${editing.cover_image_url}`} 
+                    src={editing.cover_image_url} 
                     className="h-20 rounded-lg object-cover" 
-                    alt="Current" 
+                    alt="Current"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 )}
 
@@ -259,9 +260,14 @@ export default function AdminBooks() {
               <div className="aspect-[2/3] bg-ink relative overflow-hidden">
                 {book.cover_image_url ? (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${book.cover_image_url}`} 
+                    src={book.cover_image_url} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     alt={book.title}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><span class="font-serif text-6xl text-cream/10">${book.title[0]}</span></div>`;
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

@@ -18,7 +18,6 @@ export default function BookDetail() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Breadcrumb */}
       <div className="bg-ink text-cream pt-28 pb-8 px-6">
         <div className="max-w-7xl mx-auto">
           <Link to="/books" className="text-cream/50 hover:text-warm transition-colors text-sm">
@@ -27,18 +26,21 @@ export default function BookDetail() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid lg:grid-cols-5 gap-16">
-          {/* Cover Image */}
           <div className="lg:col-span-2">
             <div className="sticky top-28">
               <div className="aspect-[2/3] rounded-xl overflow-hidden shadow-2xl">
                 {book.cover_image_url ? (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${book.cover_image_url}`}
+                    src={book.cover_image_url}
                     alt={book.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = `<div class="w-full h-full bg-parchment flex items-center justify-center"><span class="font-serif text-9xl text-stone/20">${book.title[0]}</span></div>`;
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-parchment flex items-center justify-center">
@@ -49,7 +51,6 @@ export default function BookDetail() {
             </div>
           </div>
 
-          {/* Details */}
           <div className="lg:col-span-3 py-4">
             <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4">{book.genre}</p>
             <h1 className="font-serif text-5xl md:text-6xl text-ink mb-8 leading-tight">

@@ -73,7 +73,6 @@ export default function AdminPosts() {
 
   return (
     <div className="min-h-screen bg-ink text-cream">
-      {/* Header */}
       <header className="bg-charcoal border-b border-cream/10 px-6 lg:px-12 py-5 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-4">
           <Link 
@@ -100,7 +99,6 @@ export default function AdminPosts() {
       </header>
 
       <div className="max-w-6xl mx-auto px-6 lg:px-12 py-12">
-        {/* Title + Add Button */}
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="font-serif text-3xl lg:text-4xl text-cream mb-2">Journal</h1>
@@ -115,7 +113,6 @@ export default function AdminPosts() {
           </button>
         </div>
 
-        {/* Form */}
         {showForm && (
           <div className="bg-charcoal rounded-xl p-8 mb-12 border border-cream/10">
             <h2 className="font-serif text-xl text-cream mb-6">
@@ -174,9 +171,10 @@ export default function AdminPosts() {
                 
                 {editing?.cover_image && !cover && (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${editing.cover_image}`} 
+                    src={editing.cover_image} 
                     className="h-20 rounded-lg object-cover" 
-                    alt="Current" 
+                    alt="Current"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 )}
 
@@ -213,7 +211,6 @@ export default function AdminPosts() {
           </div>
         )}
 
-        {/* Posts List */}
         <div className="space-y-4">
           {posts.map(post => (
             <div 
@@ -223,9 +220,14 @@ export default function AdminPosts() {
               <div className="w-20 h-20 rounded-lg bg-ink flex-shrink-0 overflow-hidden">
                 {post.cover_image ? (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${post.cover_image}`} 
+                    src={post.cover_image} 
                     className="w-full h-full object-cover"
                     alt="" 
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><span class="font-serif text-2xl text-cream/10">${post.title[0]}</span></div>`;
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

@@ -37,7 +37,6 @@ export default function AdminSite() {
     await api.put('/site', { key, value: res.data.imageUrl, type: 'image' });
     await fetchSettings();
     setSaving(false);
-    // Reset file input
     if (key === 'hero_image') setHeroImage(null);
     if (key === 'author_photo') setAuthorPhoto(null);
   };
@@ -54,7 +53,6 @@ export default function AdminSite() {
 
   return (
     <div className="min-h-screen bg-ink text-cream">
-      {/* Header */}
       <header className="bg-charcoal border-b border-cream/10 px-6 lg:px-12 py-5 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-4">
           <Link 
@@ -90,7 +88,6 @@ export default function AdminSite() {
         <h1 className="font-serif text-3xl lg:text-4xl text-cream mb-2">Site Content</h1>
         <p className="text-cream/30 text-sm mb-12">Manage your website appearance</p>
 
-        {/* Hero Section */}
         <div className="bg-charcoal rounded-xl p-8 mb-8 border border-cream/10">
           <h2 className="font-serif text-xl text-cream mb-6 flex items-center gap-3">
             <span className="w-8 h-8 rounded-lg bg-warm/20 flex items-center justify-center text-warm text-sm">1</span>
@@ -130,13 +127,13 @@ export default function AdminSite() {
                 </button>
               </div>
               
-              {/* Image Preview with Delete */}
               {settings.hero_image && (
                 <div className="mt-4 relative inline-block group">
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${settings.hero_image}`} 
+                    src={settings.hero_image} 
                     className="h-48 rounded-lg object-cover" 
-                    alt="Hero preview" 
+                    alt="Hero preview"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                   <div className="absolute inset-0 bg-ink/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
                     <button
@@ -152,7 +149,6 @@ export default function AdminSite() {
           </div>
         </div>
 
-        {/* About Section */}
         <div className="bg-charcoal rounded-xl p-8 mb-8 border border-cream/10">
           <h2 className="font-serif text-xl text-cream mb-6 flex items-center gap-3">
             <span className="w-8 h-8 rounded-lg bg-warm/20 flex items-center justify-center text-warm text-sm">2</span>
@@ -182,13 +178,13 @@ export default function AdminSite() {
                 </button>
               </div>
               
-              {/* Image Preview with Delete */}
               {settings.author_photo && (
                 <div className="mt-4 relative inline-block group">
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${settings.author_photo}`} 
+                    src={settings.author_photo} 
                     className="h-40 w-40 rounded-full object-cover border-2 border-cream/10" 
-                    alt="Author" 
+                    alt="Author"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                   <div className="absolute inset-0 bg-ink/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-full flex items-center justify-center">
                     <button
@@ -215,7 +211,6 @@ export default function AdminSite() {
           </div>
         </div>
 
-        {/* General */}
         <div className="bg-charcoal rounded-xl p-8 border border-cream/10">
           <h2 className="font-serif text-xl text-cream mb-6 flex items-center gap-3">
             <span className="w-8 h-8 rounded-lg bg-warm/20 flex items-center justify-center text-warm text-sm">3</span>

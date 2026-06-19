@@ -10,7 +10,6 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Header */}
       <div className="bg-ink text-cream pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4">The Author</p>
@@ -18,18 +17,21 @@ export default function About() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid lg:grid-cols-12 gap-16">
-          {/* Image */}
           <div className="lg:col-span-5">
             <div className="sticky top-28">
               <div className="aspect-[3/4] rounded-xl overflow-hidden">
                 {settings.author_photo ? (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${settings.author_photo}`}
+                    src={settings.author_photo}
                     alt="Willson Kenedy"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = `<div class="w-full h-full bg-parchment flex items-center justify-center"><span class="font-serif text-9xl text-stone/20">W</span></div>`;
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-parchment flex items-center justify-center">
@@ -40,7 +42,6 @@ export default function About() {
             </div>
           </div>
 
-          {/* Bio */}
           <div className="lg:col-span-7 py-8">
             <div className="prose prose-xl max-w-none text-stone leading-relaxed space-y-6">
               <p className="font-serif text-2xl text-ink leading-relaxed">
@@ -57,7 +58,6 @@ export default function About() {
               </p>
             </div>
 
-            {/* Awards */}
             <div className="mt-16 pt-16 border-t border-stone/10">
               <h3 className="font-serif text-2xl text-ink mb-8">Recognition</h3>
               <div className="grid sm:grid-cols-2 gap-6">

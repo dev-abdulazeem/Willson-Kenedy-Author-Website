@@ -15,7 +15,6 @@ export default function Books() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Header */}
       <div className="bg-ink text-cream pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4">Collection</p>
@@ -23,7 +22,6 @@ export default function Books() {
         </div>
       </div>
 
-      {/* Filter Bar */}
       <div className="sticky top-20 z-30 bg-cream/95 backdrop-blur border-b border-stone/10 py-4 px-6">
         <div className="max-w-7xl mx-auto flex gap-4 overflow-x-auto scrollbar-hide">
           {genres.map(genre => (
@@ -42,7 +40,6 @@ export default function Books() {
         </div>
       </div>
 
-      {/* Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
           {filtered.map((book, i) => (
@@ -54,16 +51,20 @@ export default function Books() {
               <div className="relative aspect-[2/3] mb-6 rounded-lg overflow-hidden bg-parchment shadow-lg group-hover:shadow-2xl transition-all duration-500">
                 {book.cover_image_url ? (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${book.cover_image_url}`}
+                    src={book.cover_image_url}
                     alt={book.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><span class="font-serif text-8xl text-stone/20">${book.title[0]}</span></div>`;
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <span className="font-serif text-8xl text-stone/20">{book.title[0]}</span>
                   </div>
                 )}
-                {/* Price Tag */}
                 {book.price && (
                   <div className="absolute top-4 right-4 bg-cream/90 backdrop-blur px-3 py-1 rounded-full">
                     <span className="text-ink font-bold text-sm">${book.price}</span>

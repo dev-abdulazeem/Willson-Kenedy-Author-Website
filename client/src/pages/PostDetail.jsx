@@ -18,9 +18,10 @@ export default function PostDetail() {
       
       {post.cover_image && (
         <img 
-          src={`https://willson-kenedy-author-website.onrender.com${post.cover_image}`}
+          src={post.cover_image}
           alt={post.title}
           className="w-full h-96 object-cover rounded-xl mb-10"
+          onError={(e) => { e.target.style.display = 'none'; }}
         />
       )}
       

@@ -19,16 +19,15 @@ export default function Home() {
 
   return (
     <div>
-      {/* HERO — Full Screen with Parallax */}
       <section ref={heroRef} className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
-        {/* Background Image with Overlay */}
         <div className="absolute inset-0">
           {settings.hero_image ? (
             <img 
-              src={`https://willson-kenedy-author-website.onrender.com${settings.hero_image}`}
+              src={settings.hero_image}
               alt=""
               className={`w-full h-full object-cover transition-all duration-1000 ${heroLoaded ? 'scale-100 opacity-100' : 'scale-110 opacity-0'}`}
               onLoad={() => setHeroLoaded(true)}
+              onError={(e) => { e.target.style.display = 'none'; }}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-charcoal via-stone to-ink" />
@@ -36,7 +35,6 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/40 to-ink/20" />
         </div>
 
-        {/* Content */}
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
           <p className="text-warm text-sm uppercase tracking-[0.4em] mb-6 animate-fade-in">
             Award-Winning Author
@@ -64,14 +62,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-cream/40">
           <span className="text-xs uppercase tracking-[0.3em]">Scroll</span>
           <div className="w-px h-12 bg-gradient-to-b from-cream/40 to-transparent animate-pulse" />
         </div>
       </section>
 
-      {/* FEATURED BOOKS — Asymmetric Grid */}
       <section className="py-24 lg:py-32 px-6 lg:px-12 bg-cream">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-16 gap-6">
@@ -101,16 +97,20 @@ export default function Home() {
                 <div className="relative aspect-[2/3] mb-6 overflow-hidden rounded-lg bg-parchment">
                   {book.cover_image_url ? (
                     <img 
-                      src={`https://willson-kenedy-author-website.onrender.com${book.cover_image_url}`}
+                      src={book.cover_image_url}
                       alt={book.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-muted"><span class="font-serif text-6xl opacity-20">${book.title[0]}</span></div>`;
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted">
                       <span className="font-serif text-6xl opacity-20">{book.title[0]}</span>
                     </div>
                   )}
-                  {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-ink/0 group-hover:bg-ink/20 transition-all duration-500" />
                 </div>
                 <div>
@@ -128,18 +128,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ABOUT SECTION — Split Layout */}
       <section className="py-24 lg:py-32 bg-parchment">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-            {/* Image Side */}
             <div className="relative">
               <div className="aspect-[4/5] rounded-lg overflow-hidden">
                 {settings.author_photo ? (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${settings.author_photo}`}
+                    src={settings.author_photo}
                     alt="Willson Kenedy"
                     className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 ) : (
                   <div className="w-full h-full bg-stone/20 flex items-center justify-center">
@@ -147,11 +146,9 @@ export default function Home() {
                   </div>
                 )}
               </div>
-              {/* Decorative Element */}
               <div className="absolute -bottom-6 -right-6 w-32 h-32 border-2 border-warm/30 rounded-lg -z-10" />
             </div>
 
-            {/* Content Side */}
             <div>
               <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4">About the Author</p>
               <h2 className="font-serif text-4xl md:text-5xl text-ink mb-8 leading-tight">
@@ -188,7 +185,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* JOURNAL / BLOG — Minimal List */}
       {latestPost && (
         <section className="py-24 lg:py-32 px-6 lg:px-12 bg-cream">
           <div className="max-w-7xl mx-auto">
@@ -213,9 +209,14 @@ export default function Home() {
               <div className="aspect-[16/10] rounded-lg overflow-hidden bg-parchment">
                 {latestPost.cover_image ? (
                   <img 
-                    src={`https://willson-kenedy-author-website.onrender.com${latestPost.cover_image}`}
+                    src={latestPost.cover_image}
                     alt={latestPost.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.style.display = 'none';
+                      e.target.parentElement.innerHTML = `<div class="w-full h-full bg-stone/10"></div>`;
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-stone/10" />
@@ -245,7 +246,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* QUOTE / TESTIMONIAL */}
       <section className="py-24 lg:py-32 bg-ink text-cream">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <div className="w-12 h-px bg-warm mx-auto mb-10" />

@@ -11,7 +11,6 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen bg-cream">
-      {/* Header */}
       <div className="bg-ink text-cream pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="text-warm text-sm uppercase tracking-[0.3em] mb-4">Journal</p>
@@ -19,7 +18,6 @@ export default function Blog() {
         </div>
       </div>
 
-      {/* Posts Grid */}
       <div className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16">
           {posts.map((post, i) => (
@@ -32,9 +30,14 @@ export default function Blog() {
                 <div className={`aspect-[16/10] rounded-xl overflow-hidden bg-parchment ${i !== 0 ? 'mb-6' : ''}`}>
                   {post.cover_image ? (
                     <img 
-                      src={`https://willson-kenedy-author-website.onrender.com${post.cover_image}`}
+                      src={post.cover_image}
                       alt={post.title}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = `<div class="w-full h-full bg-stone/10"></div>`;
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full bg-stone/10" />
