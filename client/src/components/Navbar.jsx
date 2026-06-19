@@ -10,12 +10,28 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const clickCount = useRef(0);
   const clickTimer = useRef(null);
+  const menuRef = useRef(null);
+
+  // Lock body scroll when menu open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
 
   const links = [
     { to: '/', label: 'Home' },
@@ -43,79 +59,118 @@ export default function Navbar() {
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? 'bg-ink/95 backdrop-blur-md py-4 shadow-2xl' : 'bg-transparent py-6'
+        scrolled || mobileOpen ? 'bg-ink/95 backdrop-blur-md py-3 sm:py-4 shadow-2xl' : 'bg-transparent py-4 sm:py-6'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
           {/* Logo */}
           <Link 
             to="/" 
             onClick={handleLogoClick}
-            className="group relative"
+            className="group relative z-50"
           >
-            <span className={`font-serif text-2xl lg:text-3xl font-bold tracking-tight transition-colors duration-300 ${
-              scrolled || location.pathname !== '/' ? 'text-cream' : 'text-cream'
-            }`}>
+            <span className={`font-serif text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight transition-colors duration-300 text-cream`}>
               Willson Kenedy
             </span>
             <span className="absolute -bottom-1 left-0 w-0 h-px bg-warm transition-all duration-300 group-hover:w-full" />
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-10">
+          <div className="hidden lg:flex items-center gap-8 xl:gap-10">
             {links.map(link => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`relative text-sm uppercase tracking-[0.2em] font-medium transition-colors duration-300 ${
+                className={`relative text-xs xl:text-sm uppercase tracking-[0.15em] xl:tracking-[0.2em] font-medium transition-colors duration-300 py-2 ${
                   isActive(link.to) ? 'text-warm' : 'text-cream/70 hover:text-cream'
                 }`}
               >
                 {link.label}
                 {isActive(link.to) && (
-                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-warm rounded-full" />
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-warm rounded-full" />
                 )}
               </Link>
             ))}
             {user && (
               <Link 
                 to="/admin" 
-                className="text-xs uppercase tracking-[0.2em] text-gold/80 hover:text-gold transition-colors border border-gold/30 px-4 py-2 rounded-full hover:border-gold"
+                className="text-xs uppercase tracking-[0.2em] text-gold/80 hover:text-gold transition-colors border border-gold/30 px-3 xl:px-4 py-2 rounded-full hover:border-gold"
               >
                 Dashboard
               </Link>
             )}
           </div>
 
-          {/* Mobile Hamburger */}
+          {/* Mobile Hamburger - larger touch target */}
           <button 
-            className="lg:hidden relative w-8 h-8 flex flex-col justify-center items-center gap-1.5"
+            className="lg:hidden relative z-50 w-12 h-12 flex flex-col justify-center items-center gap-1.5 rounded-lg hover:bg-cream/5 transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
           >
-            <span className={`block w-6 h-px bg-cream transition-all duration-300 ${mobileOpen ? 'rotate-45 translate-y-[3.5px]' : ''}`} />
-            <span className={`block w-6 h-px bg-cream transition-all duration-300 ${mobileOpen ? 'opacity-0' : ''}`} />
-            <span className={`block w-6 h-px bg-cream transition-all duration-300 ${mobileOpen ? '-rotate-45 -translate-y-[3.5px]' : ''}`} />
+            <span className={`block w-6 h-px bg-cream transition-all duration-300 origin-center ${mobileOpen ? 'rotate-45 translate-y-[3.5px]' : ''}`} />
+            <span className={`block w-6 h-px bg-cream transition-all duration-300 ${mobileOpen ? 'opacity-0 scale-0' : ''}`} />
+            <span className={`block w-6 h-px bg-cream transition-all duration-300 origin-center ${mobileOpen ? '-rotate-45 -translate-y-[3.5px]' : ''}`} />
           </button>
         </div>
       </nav>
 
       {/* Mobile Menu Overlay */}
-      <div className={`fixed inset-0 z-40 bg-ink transition-all duration-500 lg:hidden ${
-        mobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-      }`}>
-        <div className="flex flex-col items-center justify-center h-full gap-8">
+      <div 
+        ref={menuRef}
+        className={`fixed inset-0 z-40 bg-ink transition-all duration-500 lg:hidden flex flex-col ${
+          mobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+        }`}
+      >
+        {/* Close button for accessibility */}
+        <div className="flex justify-end p-4 sm:p-6">
+          <button 
+            onClick={() => setMobileOpen(false)}
+            className="w-12 h-12 flex items-center justify-center text-cream/50 hover:text-cream transition-colors"
+            aria-label="Close menu"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 sm:gap-8 px-6 pb-20">
           {links.map((link, i) => (
             <Link
               key={link.to}
               to={link.to}
               onClick={() => setMobileOpen(false)}
-              className={`font-serif text-4xl text-cream hover:text-warm transition-all duration-300 ${
+              className={`font-serif text-3xl sm:text-4xl text-cream hover:text-warm transition-all duration-300 ${
                 mobileOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
               }`}
-              style={{ transitionDelay: `${i * 50}ms` }}
+              style={{ transitionDelay: `${i * 75}ms` }}
             >
               {link.label}
+              {isActive(link.to) && (
+                <span className="block w-2 h-2 bg-warm rounded-full mx-auto mt-2" />
+              )}
             </Link>
           ))}
+          
+          {user && (
+            <Link
+              to="/admin"
+              onClick={() => setMobileOpen(false)}
+              className={`mt-4 text-sm uppercase tracking-[0.2em] text-gold/80 hover:text-gold transition-all duration-300 border border-gold/30 px-6 py-3 rounded-full hover:border-gold ${
+                mobileOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+              }`}
+              style={{ transitionDelay: `${links.length * 75}ms` }}
+            >
+              Dashboard
+            </Link>
+          )}
+        </div>
+
+        {/* Footer in mobile menu */}
+        <div className={`text-center pb-8 text-cream/20 text-xs uppercase tracking-wider transition-all duration-300 ${
+          mobileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`} style={{ transitionDelay: `${(links.length + 1) * 75}ms` }}>
+          © 2024 Willson Kenedy
         </div>
       </div>
     </>
