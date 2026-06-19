@@ -28,15 +28,15 @@ function LazyImage({ src, alt, className, onError }) {
 function PostSkeleton() {
   return (
     <div className="min-h-screen bg-cream animate-pulse">
-      <div className="py-20 px-6 max-w-4xl mx-auto">
-        <div className="h-4 bg-stone/10 rounded w-32 mb-8" />
-        <div className="aspect-[21/9] rounded-xl bg-stone/10 mb-10" />
-        <div className="h-4 bg-stone/10 rounded w-24 mb-2" />
-        <div className="h-12 bg-stone/10 rounded w-3/4 mb-8" />
-        <div className="space-y-4">
-          <div className="h-4 bg-stone/10 rounded w-full" />
-          <div className="h-4 bg-stone/10 rounded w-full" />
-          <div className="h-4 bg-stone/10 rounded w-2/3" />
+      <div className="py-12 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto">
+        <div className="h-4 bg-stone/10 rounded w-24 sm:w-32 mb-6 sm:mb-8" />
+        <div className="aspect-[21/9] rounded-xl bg-stone/10 mb-8 sm:mb-10" />
+        <div className="h-3 sm:h-4 bg-stone/10 rounded w-20 sm:w-24 mb-2" />
+        <div className="h-8 sm:h-12 bg-stone/10 rounded w-3/4 mb-6 sm:mb-8" />
+        <div className="space-y-3 sm:space-y-4">
+          <div className="h-3 sm:h-4 bg-stone/10 rounded w-full" />
+          <div className="h-3 sm:h-4 bg-stone/10 rounded w-full" />
+          <div className="h-3 sm:h-4 bg-stone/10 rounded w-2/3" />
         </div>
       </div>
     </div>
@@ -58,7 +58,7 @@ export default function PostDetail() {
   if (loading) return <PostSkeleton />;
 
   if (!post) return (
-    <div className="min-h-screen bg-cream flex items-center justify-center">
+    <div className="min-h-screen bg-cream flex items-center justify-center px-4">
       <div className="text-center">
         <p className="text-stone text-lg mb-4">Post not found</p>
         <Link to="/blog" className="text-warm hover:underline inline-flex items-center gap-2">
@@ -70,44 +70,46 @@ export default function PostDetail() {
 
   return (
     <div className="min-h-screen bg-cream">
-      <div className="py-20 px-6 max-w-4xl mx-auto">
+      <div className="py-12 sm:py-20 px-4 sm:px-6 max-w-4xl mx-auto">
         <Link 
           to="/blog" 
-          className="text-stone hover:text-warm transition-colors mb-8 inline-flex items-center gap-2 group text-sm uppercase tracking-wider"
+          className="text-stone hover:text-warm transition-colors mb-6 sm:mb-8 inline-flex items-center gap-2 group text-xs sm:text-sm uppercase tracking-wider"
         >
           <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to Journal
         </Link>
         
         {post.cover_image && (
-          <div className="rounded-xl overflow-hidden mb-10 shadow-lg">
+          <div className="rounded-xl overflow-hidden mb-8 sm:mb-10 shadow-lg">
             <LazyImage
               src={getImageUrl(post.cover_image)}
               alt={post.title}
-              className="w-full h-96 object-cover"
+              className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
           </div>
         )}
         
         <div className="animate-fade-in">
-          <p className="text-warm font-medium mb-2 text-sm uppercase tracking-wider">
+          <p className="text-warm font-medium mb-2 text-xs sm:text-sm uppercase tracking-wider">
             {new Date(post.published_at).toLocaleDateString('en-US', { 
               month: 'long', day: 'numeric', year: 'numeric' 
             })}
           </p>
-          <h1 className="font-serif text-4xl md:text-5xl text-ink mb-8 leading-tight">{post.title}</h1>
+          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-ink mb-6 sm:mb-8 leading-tight">
+            {post.title}
+          </h1>
           
           <div 
-            className="prose prose-lg max-w-none text-stone leading-relaxed"
+            className="prose prose-sm sm:prose-base lg:prose-lg max-w-none text-stone leading-relaxed"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </div>
 
-        {/* Share / Navigation */}
-        <div className="mt-16 pt-8 border-t border-stone/10">
+        {/* Navigation */}
+        <div className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-stone/10">
           <Link 
             to="/blog"
-            className="inline-flex items-center gap-2 text-stone hover:text-warm transition-colors text-sm uppercase tracking-wider group"
+            className="inline-flex items-center gap-2 text-stone hover:text-warm transition-colors text-xs sm:text-sm uppercase tracking-wider group"
           >
             <span className="group-hover:-translate-x-1 transition-transform">←</span> All Entries
           </Link>

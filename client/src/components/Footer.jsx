@@ -149,7 +149,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-cream/10 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-cream/20">
-          <p className="text-center sm:text-left">© 2024 Willson Kenedy. All rights reserved.</p>
+          <p className="text-center sm:text-left">© 2026 Willson Kenedy. All rights reserved.</p>
           <div className="flex gap-4 sm:gap-6">
             <span className="hover:text-cream/40 cursor-pointer transition-colors py-1">Privacy Policy</span>
             <span className="hover:text-cream/40 cursor-pointer transition-colors py-1">Terms of Use</span>

@@ -170,7 +170,7 @@ export default function Navbar() {
         <div className={`text-center pb-8 text-cream/20 text-xs uppercase tracking-wider transition-all duration-300 ${
           mobileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`} style={{ transitionDelay: `${(links.length + 1) * 75}ms` }}>
-          © 2024 Willson Kenedy
+          © 2026 Willson Kenedy
         </div>
       </div>
     </>
