@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-// Load Cloudinary config (validates env vars on startup)
+// Load Cloudinary config
 require('./config/cloudinary');
 
 const app = express();

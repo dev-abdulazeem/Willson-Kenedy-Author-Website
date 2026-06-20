@@ -24,6 +24,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "pg": "^8.21.0",
     "slugify": "^1.6.9",
+    "streamifier": "^0.1.1",
     "uuid": "^14.0.0"
   },
   "devDependencies": {
