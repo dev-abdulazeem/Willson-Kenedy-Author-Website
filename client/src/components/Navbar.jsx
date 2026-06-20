@@ -7,12 +7,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const clickCount = useRef(0);
   const clickTimer = useRef(null);
-  const menuRef = useRef(null);
 
-  // Lock body scroll when menu open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden';
@@ -28,7 +26,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
@@ -68,7 +65,7 @@ export default function Navbar() {
             onClick={handleLogoClick}
             className="group relative z-50"
           >
-            <span className={`font-serif text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight transition-colors duration-300 text-cream`}>
+            <span className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-cream">
               Willson Kenedy
             </span>
             <span className="absolute -bottom-1 left-0 w-0 h-px bg-warm transition-all duration-300 group-hover:w-full" />
@@ -100,41 +97,44 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Hamburger - larger touch target */}
+          {/* PERFECT X Hamburger / Close Button */}
           <button 
-            className="lg:hidden relative z-50 w-12 h-12 flex flex-col justify-center items-center gap-1.5 rounded-lg hover:bg-cream/5 transition-colors"
+            className="lg:hidden relative z-50 w-14 h-14 flex items-center justify-center rounded-xl hover:bg-cream/10 transition-colors active:scale-95"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
           >
-            <span className={`block w-6 h-px bg-cream transition-all duration-300 origin-center ${mobileOpen ? 'rotate-45 translate-y-[3.5px]' : ''}`} />
-            <span className={`block w-6 h-px bg-cream transition-all duration-300 ${mobileOpen ? 'opacity-0 scale-0' : ''}`} />
-            <span className={`block w-6 h-px bg-cream transition-all duration-300 origin-center ${mobileOpen ? '-rotate-45 -translate-y-[3.5px]' : ''}`} />
+            <div className="relative w-7 h-7 flex items-center justify-center">
+              {/* Top line */}
+              <span 
+                className={`absolute block w-7 h-[3px] bg-cream rounded-full transition-all duration-300 ease-in-out ${
+                  mobileOpen ? 'rotate-45' : '-translate-y-[8px]'
+                }`} 
+              />
+              {/* Middle line */}
+              <span 
+                className={`absolute block w-7 h-[3px] bg-cream rounded-full transition-all duration-300 ease-in-out ${
+                  mobileOpen ? 'opacity-0 scale-0' : ''
+                }`} 
+              />
+              {/* Bottom line */}
+              <span 
+                className={`absolute block w-7 h-[3px] bg-cream rounded-full transition-all duration-300 ease-in-out ${
+                  mobileOpen ? '-rotate-45' : 'translate-y-[8px]'
+                }`} 
+              />
+            </div>
           </button>
         </div>
       </nav>
 
       {/* Mobile Menu Overlay */}
       <div 
-        ref={menuRef}
         className={`fixed inset-0 z-40 bg-ink transition-all duration-500 lg:hidden flex flex-col ${
           mobileOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
       >
-        {/* Close button for accessibility */}
-        <div className="flex justify-end p-4 sm:p-6">
-          <button 
-            onClick={() => setMobileOpen(false)}
-            className="w-12 h-12 flex items-center justify-center text-cream/50 hover:text-cream transition-colors"
-            aria-label="Close menu"
-          >
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 sm:gap-8 px-6 pb-20">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 sm:gap-8 px-6 pb-20 pt-24">
           {links.map((link, i) => (
             <Link
               key={link.to}
@@ -166,7 +166,6 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Footer in mobile menu */}
         <div className={`text-center pb-8 text-cream/20 text-xs uppercase tracking-wider transition-all duration-300 ${
           mobileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`} style={{ transitionDelay: `${(links.length + 1) * 75}ms` }}>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 
-const API_BASE = 'https://willson-kenedy-author-website.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 function getImageUrl(path) {
   if (!path) return null;
@@ -52,7 +52,7 @@ export default function Books() {
           {filtered.map((book, i) => (
             <Link 
               key={book.id} 
-              to={`/books/${book.slug}`}
+              to={`/books/${book.id}`}
               className="group"
             >
               <div className="relative aspect-[2/3] mb-6 rounded-lg overflow-hidden bg-parchment shadow-lg group-hover:shadow-2xl transition-all duration-500">

@@ -16,7 +16,6 @@ import AdminPosts from './pages/admin/AdminPosts';
 import AdminSite from './pages/admin/AdminSite';
 import AdminSubscribers from './pages/admin/AdminSubscribers';
 
-// Layout wrapper that conditionally shows navbar/footer
 function Layout({ children }) {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');
@@ -38,13 +37,13 @@ function AppRoutes() {
       {/* Public Routes */}
       <Route path="/" element={<Layout><Home /></Layout>} />
       <Route path="/books" element={<Layout><Books /></Layout>} />
-      <Route path="/books/:slug" element={<Layout><BookDetail /></Layout>} />
+      <Route path="/books/:id" element={<Layout><BookDetail /></Layout>} />
       <Route path="/about" element={<Layout><About /></Layout>} />
       <Route path="/blog" element={<Layout><Blog /></Layout>} />
       <Route path="/blog/:slug" element={<Layout><PostDetail /></Layout>} />
       <Route path="/contact" element={<Layout><Contact /></Layout>} />
       
-      {/* Admin Routes — NO navbar, NO footer */}
+      {/* Admin Routes */}
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/admin/books" element={<AdminBooks />} />

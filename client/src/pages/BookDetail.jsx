@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 
-const API_BASE = 'https://willson-kenedy-author-website.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 function getImageUrl(path) {
   if (!path) return null;
@@ -60,16 +60,17 @@ function BookSkeleton() {
 }
 
 export default function BookDetail() {
-  const { slug } = useParams();
+  const { id } = useParams();
   const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    api.get(`/books/${slug}`)
+    api.get(`/books/${id}`)
       .then(res => setBook(res.data))
+      .catch(() => setBook(null))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [id]);
 
   if (loading) return <BookSkeleton />;
 
