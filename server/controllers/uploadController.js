@@ -1,5 +1,4 @@
-const fs = require('fs');
-const path = require('path');
+const cloudinary = require('../config/cloudinary');
 
 // Upload single image
 exports.uploadImage = (req, res) => {
@@ -7,22 +6,29 @@ exports.uploadImage = (req, res) => {
     return res.status(400).json({ message: 'No file uploaded' });
   }
 
-  // Build full URL — this is what was missing!
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
-
-  res.json({ imageUrl });
+  // Cloudinary gives us the URL directly
+  res.json({ imageUrl: req.file.path });
 };
 
 // Delete image
-exports.deleteImage = (req, res) => {
-  const filename = req.params.filename;
-  const filepath = path.join(__dirname, '../uploads', filename);
-
-  fs.unlink(filepath, (err) => {
-    if (err) {
-      return res.status(500).json({ message: 'Error deleting file' });
+exports.deleteImage = async (req, res) => {
+  try {
+    // Extract public_id from Cloudinary URL
+    // URL format: https://res.cloudinary.com/cloud_name/image/upload/v1234567890/folder/filename.jpg
+    const url = req.body.imageUrl; // send the full URL from frontend when deleting
+    
+    if (!url) {
+      return res.status(400).json({ message: 'imageUrl required in body' });
     }
-    res.json({ message: 'File deleted' });
-  });
+
+    // Extract public_id
+    const splitUrl = url.split('/upload/')[1]; // gets: v1234567890/folder/filename.jpg
+    const publicId = splitUrl.split('.')[0]; // removes extension: v1234567890/folder/filename
+
+    await cloudinary.uploader.destroy(publicId);
+    
+    res.json({ message: 'Image deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting image', error: error.message });
+  }
 };

@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 
-const API_BASE = 'https://willson-kenedy-author-website.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 function getImageUrl(path) {
   if (!path) return null;
-  return path.startsWith('http') ? path : `${API_BASE}${path}`;
+  if (path.startsWith('http')) return path;
+  return `${API_BASE}${path}`;
 }
 
 function LazyImage({ src, alt, className, fallback }) {

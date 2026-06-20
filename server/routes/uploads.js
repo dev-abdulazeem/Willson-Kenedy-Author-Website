@@ -5,6 +5,6 @@ const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 router.post('/', auth, upload.single('image'), uploadController.uploadImage);
-router.delete('/:filename', auth, uploadController.deleteImage);
+router.delete('/', auth, uploadController.deleteImage); // changed to POST/DELETE with body
 
 module.exports = router;

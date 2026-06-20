@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 require('dotenv').config();
+
+// Load Cloudinary config (validates env vars on startup)
+require('./config/cloudinary');
 
 const app = express();
 
@@ -12,9 +14,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Static files (uploaded images)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -30,10 +29,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Willson Kenedy API is running' });
 });
 
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  res.status(500).json({ message: err.message || 'Something went wrong!' });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -3,11 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 
-const API_BASE = 'https://willson-kenedy-author-website.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
 
 function getImageUrl(path) {
   if (!path) return null;
-  return path.startsWith('http') ? path : `${API_BASE}${path}`;
+  if (path.startsWith('http')) return path;
+  return `${API_BASE}${path}`;
 }
 
 function LazyImage({ src, alt, className, onError }) {
@@ -93,13 +94,24 @@ export default function AdminSite() {
   };
 
   const handleImageDelete = async (key) => {
-    if (!confirm('Remove this image?')) return;
-    setSaving(true);
-    await api.put('/site', { key, value: '', type: 'image' });
-    await fetchSettings();
-    setSaving(false);
-    showSaved(key);
-  };
+  if (!confirm('Remove this image?')) return;
+  setSaving(true);
+  
+  // Optionally delete from Cloudinary too
+  const currentUrl = settings[key];
+  if (currentUrl && currentUrl.includes('cloudinary')) {
+    try {
+      await api.delete('/uploads/', { data: { imageUrl: currentUrl } });
+    } catch (err) {
+      console.log('Cloudinary delete failed or image already gone');
+    }
+  }
+  
+  await api.put('/site', { key, value: '', type: 'image' });
+  await fetchSettings();
+  setSaving(false);
+  showSaved(key);
+};
 
   const handleHeroChange = (e) => {
     const file = e.target.files[0];
