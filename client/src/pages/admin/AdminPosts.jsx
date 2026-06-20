@@ -3,16 +3,27 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 
-const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
-
+// Cloudinary URLs are already full — no need to prepend anything
 function getImageUrl(path) {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${API_BASE}${path}`;
+  return path;
 }
 
 function LazyImage({ src, alt, className, fallback }) {
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return fallback ? (
+      <div className={className} dangerouslySetInnerHTML={{ __html: fallback }} />
+    ) : (
+      <div className={`${className} flex items-center justify-center bg-ink`}>
+        <span className="font-serif text-2xl text-cream/10">{alt?.[0] || '?'}</span>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full">
       {!loaded && <div className="absolute inset-0 bg-cream/5 animate-pulse" />}
@@ -21,11 +32,7 @@ function LazyImage({ src, alt, className, fallback }) {
         alt={alt}
         className={`${className} transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         onLoad={() => setLoaded(true)}
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.style.display = 'none';
-          if (fallback) e.target.parentElement.innerHTML = fallback;
-        }}
+        onError={() => setError(true)}
       />
     </div>
   );
@@ -60,17 +67,25 @@ export default function AdminPosts() {
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!user) { navigate('/admin/login'); return; }
+    if (!user) { 
+      navigate('/admin/login'); 
+      return; 
+    }
     fetchPosts();
-  }, [user]);
+  }, [user, navigate]);
 
   const fetchPosts = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/posts/admin/all');
-      setPosts(res.data);
+      setPosts(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch posts:', err);
+      setError('Failed to load posts. Please check your connection.');
     } finally {
       setLoading(false);
     }
@@ -79,6 +94,9 @@ export default function AdminPosts() {
   const handleCoverChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (coverPreview && coverPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(coverPreview);
+      }
       setCover(file);
       setCoverPreview(URL.createObjectURL(file));
     }
@@ -87,20 +105,37 @@ export default function AdminPosts() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setError(null);
+    
     const data = new FormData();
-    Object.keys(form).forEach(key => data.append(key, form[key]));
-    if (cover) data.append('cover', cover);
-    if (editing) data.append('existing_image', editing.cover_image || '');
+    data.append('title', form.title);
+    data.append('content', form.content);
+    data.append('excerpt', form.excerpt || '');
+    data.append('is_published', form.is_published ? 'true' : 'false');
+    
+    if (cover) {
+      data.append('cover', cover);
+    }
+    if (editing) {
+      data.append('existing_image', editing.cover_image || '');
+    }
 
     try {
       if (editing) {
-        await api.put(`/posts/${editing.id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.put(`/posts/${editing.id}`, data, { 
+          headers: { 'Content-Type': 'multipart/form-data' } 
+        });
       } else {
-        await api.post('/posts', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+        await api.post('/posts', data, { 
+          headers: { 'Content-Type': 'multipart/form-data' } 
+        });
       }
       resetForm();
       setShowForm(false);
       fetchPosts();
+    } catch (err) {
+      console.error('Submit failed:', err);
+      setError(err.response?.data?.message || 'Failed to save post. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -109,35 +144,55 @@ export default function AdminPosts() {
   const resetForm = () => {
     setForm({ title: '', content: '', excerpt: '', is_published: false });
     setCover(null);
+    if (coverPreview && coverPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(coverPreview);
+    }
     setCoverPreview(null);
     setEditing(null);
+    setError(null);
   };
 
   const handleEdit = (post) => {
     setEditing(post);
     setForm({
-      title: post.title,
-      content: post.content,
+      title: post.title || '',
+      content: post.content || '',
       excerpt: post.excerpt || '',
-      is_published: post.is_published
+      is_published: !!post.is_published
     });
-    setCoverPreview(null);
+    // Show existing Cloudinary image in preview
+    setCoverPreview(post.cover_image ? getImageUrl(post.cover_image) : null);
+    setCover(null);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this post permanently?')) return;
+    if (!window.confirm('Delete this post permanently?')) return;
     setDeletingId(id);
-    await api.delete(`/posts/${id}`);
-    setDeletingId(null);
-    fetchPosts();
+    try {
+      await api.delete(`/posts/${id}`);
+      fetchPosts();
+    } catch (err) {
+      console.error('Delete failed:', err);
+      alert('Failed to delete post. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleCancel = () => {
     resetForm();
     setShowForm(false);
   };
+
+  useEffect(() => {
+    return () => {
+      if (coverPreview && coverPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(coverPreview);
+      }
+    };
+  }, [coverPreview]);
 
   if (!user) return null;
 
@@ -183,6 +238,12 @@ export default function AdminPosts() {
           </button>
         </div>
 
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-6 py-4 rounded-xl mb-8">
+            {error}
+          </div>
+        )}
+
         {showForm && (
           <div className="bg-charcoal rounded-xl p-8 mb-12 border border-cream/10 animate-fade-in">
             <h2 className="font-serif text-xl text-cream mb-6">
@@ -222,12 +283,12 @@ export default function AdminPosts() {
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 flex-wrap">
                 <div>
                   <label className="block text-xs uppercase tracking-[0.2em] text-cream/40 mb-3">Featured Image</label>
                   <div className="flex items-center gap-4">
                     <label className="px-5 py-3 bg-cream/5 border border-cream/10 rounded-lg text-sm text-cream/50 hover:text-cream hover:border-cream/20 transition-all cursor-pointer">
-                      Choose File
+                      {cover ? 'Change File' : 'Choose File'}
                       <input
                         type="file"
                         accept="image/*"
@@ -235,17 +296,20 @@ export default function AdminPosts() {
                         className="hidden"
                       />
                     </label>
-                    {cover && <span className="text-sm text-cream/50">{cover.name}</span>}
+                    {cover && <span className="text-sm text-cream/50 truncate max-w-[150px]">{cover.name}</span>}
                   </div>
                 </div>
                 
                 {(coverPreview || (editing?.cover_image && !cover)) && (
-                  <div className="relative h-20 rounded-lg overflow-hidden">
-                    <LazyImage
+                  <div className="relative h-20 w-32 rounded-lg overflow-hidden border border-cream/10 bg-ink flex-shrink-0">
+                    <img
                       src={coverPreview || getImageUrl(editing.cover_image)}
-                      alt="Current"
-                      className="h-20 rounded-lg object-cover"
-                      onError={(e) => { e.target.style.display = 'none'; }}
+                      alt="Cover preview"
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center"><span class="font-serif text-2xl text-cream/10">${form.title?.[0] || 'W'}</span></div>`;
+                      }}
                     />
                   </div>
                 )}
@@ -297,17 +361,17 @@ export default function AdminPosts() {
                 className="bg-charcoal rounded-xl p-6 flex items-center gap-6 border border-cream/5 hover:border-cream/10 transition-all group hover:bg-charcoal/80"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-                <div className="w-20 h-20 rounded-lg bg-ink flex-shrink-0 overflow-hidden">
+                <div className="w-20 h-20 rounded-lg bg-ink flex-shrink-0 overflow-hidden border border-cream/5">
                   {post.cover_image ? (
                     <LazyImage
                       src={getImageUrl(post.cover_image)}
-                      alt=""
+                      alt={post.title || 'Post'}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      fallback={`<div class="w-full h-full flex items-center justify-center"><span class="font-serif text-2xl text-cream/10">${post.title[0]}</span></div>`}
+                      fallback={`<div class="w-full h-full flex items-center justify-center"><span class="font-serif text-2xl text-cream/10">${post.title?.[0] || 'W'}</span></div>`}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="font-serif text-2xl text-cream/10">{post.title[0]}</span>
+                      <span className="font-serif text-2xl text-cream/10">{post.title?.[0] || 'W'}</span>
                     </div>
                   )}
                 </div>

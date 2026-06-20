@@ -1,6 +1,6 @@
 const multer = require('multer');
 
-// Store file in memory (not disk) so we can upload to Cloudinary
+// Store file in memory so we can upload to Cloudinary manually in controller
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
